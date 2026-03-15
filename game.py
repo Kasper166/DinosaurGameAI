@@ -1,3 +1,5 @@
+from turtle import done
+
 import pygame
 import random
 import sys
@@ -11,10 +13,8 @@ FPS           = 60
 WHITE  = (255, 255, 255)
 BLACK  = (0,   0,   0)
 GREY   = (150, 150, 150)
-RED    = (200, 50,  50)
-GREEN  = (80,  160, 80)
 
-# ── Pixel art dino ────────────────────────────────────────────────────────────
+# ── Pixel art grids ───────────────────────────────────────────────────────────
 DINO_PIXELS_RUN1 = [
     [0,0,0,0,0,1,1,1,1,1,0,0],
     [0,0,0,0,1,1,1,1,1,1,1,0],
@@ -33,7 +33,6 @@ DINO_PIXELS_RUN1 = [
     [0,0,0,1,1,0,0,0,0,0,0,0],
     [0,0,0,0,1,0,0,0,0,0,0,0],
 ]
-
 DINO_PIXELS_RUN2 = [
     [0,0,0,0,0,1,1,1,1,1,0,0],
     [0,0,0,0,1,1,1,1,1,1,1,0],
@@ -52,7 +51,42 @@ DINO_PIXELS_RUN2 = [
     [0,0,1,0,0,1,1,0,0,0,0,0],
     [0,1,1,0,0,0,1,0,0,0,0,0],
 ]
-
+DINO_PIXELS_DUCK1 = [
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,0],
+    [0,0,0,0,1,1,1,0,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,0],
+    [1,1,1,1,1,1,1,1,0,0,0,0],
+    [1,1,1,1,1,1,0,0,0,0,0,0],
+    [0,1,1,1,1,1,0,0,0,0,0,0],
+    [0,0,1,0,1,0,1,1,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+]
+DINO_PIXELS_DUCK2 = [
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,1,0,0],
+    [0,0,0,0,1,1,1,1,1,1,1,0],
+    [0,0,0,0,1,1,1,0,1,0,0,0],
+    [0,0,1,1,1,1,1,1,1,1,1,0],
+    [1,1,1,1,1,1,1,1,0,0,0,0],
+    [1,1,1,1,1,1,0,0,0,0,0,0],
+    [0,1,1,1,1,1,0,0,0,0,0,0],
+    [0,1,0,1,0,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+]
 CACTUS_PIXELS = [
     [0,0,0,1,1,0,0,0],
     [0,0,0,1,1,0,0,0],
@@ -71,63 +105,6 @@ CACTUS_PIXELS = [
     [0,0,0,1,1,0,0,0],
     [0,0,0,1,1,0,0,0],
 ]
-
-DINO_PIXELS_DUCK1 = [
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,0,0],
-    [0,0,0,0,1,1,1,1,1,1,1,0],
-    [0,0,0,0,1,1,1,0,1,0,0,0],
-    [0,0,1,1,1,1,1,1,1,1,1,0],
-    [1,1,1,1,1,1,1,1,0,0,0,0],
-    [1,1,1,1,1,1,0,0,0,0,0,0],
-    [0,1,1,1,1,1,0,0,0,0,0,0],
-    [0,0,1,0,1,0,1,1,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    
-]
-
-DINO_PIXELS_DUCK2 = [
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,1,1,1,1,1,0,0],
-    [0,0,0,0,1,1,1,1,1,1,1,0],
-    [0,0,0,0,1,1,1,0,1,0,0,0],
-    [0,0,1,1,1,1,1,1,1,1,1,0],
-    [1,1,1,1,1,1,1,1,0,0,0,0],
-    [1,1,1,1,1,1,0,0,0,0,0,0],
-    [0,1,1,1,1,1,0,0,0,0,0,0],
-    [0,1,0,1,0,0,1,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    
-]
-
-BIRD_PIXELS_FRAME1 = [
-    [0,0,1,1,0,0,0,1,1,0,0,0],
-    [0,1,1,1,1,1,1,1,1,1,0,0],
-    [1,1,1,1,1,1,1,1,0,0,1,1],
-    [0,1,1,1,1,1,1,1,0,0,0,0],
-    [0,0,1,1,0,0,0,0,0,0,0,0],
-]
-
-BIRD_PIXELS_FRAME2 = [
-    [0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,1,1,0,0,0,1,1,0,0,0],
-    [1,1,1,1,1,1,1,1,1,1,1,1],
-    [0,1,1,1,1,1,1,1,0,0,0,0],
-    [0,0,1,1,0,0,0,0,0,0,0,0],
-]
-
 CACTUS_TALL_PIXELS = [
     [0,0,1,1,0,0,0,0],
     [0,0,1,1,0,0,0,0],
@@ -146,7 +123,6 @@ CACTUS_TALL_PIXELS = [
     [0,0,1,1,0,0,0,0],
     [0,0,1,1,0,0,0,0],
 ]
-
 CACTUS_DOUBLE_PIXELS = [
     [0,0,1,1,0,0,1,1],
     [0,0,1,1,0,0,1,1],
@@ -165,7 +141,6 @@ CACTUS_DOUBLE_PIXELS = [
     [0,0,1,1,1,1,0,0],
     [0,0,1,1,1,1,0,0],
 ]
-
 CACTUS_WIDE_PIXELS = [
     [0,0,1,1,0,1,1,0,0,1,1,0],
     [0,0,1,1,0,1,1,0,0,1,1,0],
@@ -179,18 +154,32 @@ CACTUS_WIDE_PIXELS = [
     [0,0,1,1,0,1,1,0,1,1,0,0],
     [0,0,1,1,0,1,1,0,1,1,0,0],
     [0,0,1,1,0,1,1,0,1,1,0,0],
-    [0,0,1,1,0,0,1,0,0,1,0,0],
+    [0,0,0,1,0,0,1,0,0,1,0,0],
     [0,0,0,1,0,0,1,0,0,1,0,0],
     [0,0,0,1,0,0,1,0,0,1,0,0],
     [0,0,0,1,0,0,1,0,0,1,0,0],
 ]
+BIRD_PIXELS_FRAME1 = [
+    [0,0,1,1,0,0,0,1,1,0,0,0],
+    [0,1,1,1,1,1,1,1,1,1,0,0],
+    [1,1,1,1,1,1,1,1,0,0,1,1],
+    [0,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,1,1,0,0,0,0,0,0,0,0],
+]
+BIRD_PIXELS_FRAME2 = [
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,1,1,0,0,0,1,1,0,0,0],
+    [1,1,1,1,1,1,1,1,1,1,1,1],
+    [0,1,1,1,1,1,1,1,0,0,0,0],
+    [0,0,1,1,0,0,0,0,0,0,0,0],
+]
+
 PIXEL_SIZE = 4
 DINO_W     = 12 * PIXEL_SIZE
 DINO_H     = 16 * PIXEL_SIZE
-CACTUS_W   = 10  * PIXEL_SIZE
-CACTUS_H   = 18 * PIXEL_SIZE
-BIRD_W = 12 * PIXEL_SIZE
-BIRD_H = 5  * PIXEL_SIZE
+CACTUS_H   = 16 * PIXEL_SIZE
+BIRD_W     = 12 * PIXEL_SIZE
+BIRD_H     =  5 * PIXEL_SIZE
 
 def draw_pixel_art(screen, grid, x, y, color):
     for row_i, row in enumerate(grid):
@@ -206,38 +195,38 @@ class Dino:
     X = 80
 
     def __init__(self):
-        self.y          = GROUND_Y - DINO_H
-        self.vel_y      = 0
-        self.is_jumping = False
-        self.is_ducking = False
-        self.frame      = 0
-        self.anim_tick  = 0
+        self.y           = GROUND_Y - DINO_H
+        self.vel_y       = 0
+        self.is_jumping  = False
+        self.is_ducking  = False
+        self.frame       = 0
+        self.anim_tick   = 0
+        self.just_landed = False
 
     def jump(self):
         if not self.is_jumping and not self.is_ducking:
-            self.vel_y      = -18
+            self.vel_y     = -18
             self.is_jumping = True
 
     def duck(self, ducking):
-        if not self.is_jumping:
-            self.is_ducking = ducking
+        self.is_ducking = ducking
 
     def update(self):
+        self.just_landed = False
         if self.is_jumping:
             self.vel_y += 1
             self.y     += self.vel_y
             if self.y >= GROUND_Y - DINO_H:
-                self.y          = GROUND_Y - DINO_H
-                self.vel_y      = 0
-                self.is_jumping = False
-
+                self.y           = GROUND_Y - DINO_H
+                self.vel_y       = 0
+                self.is_jumping  = False
+                self.is_ducking  = False
+                self.just_landed = True
         if not self.is_jumping:
             self.anim_tick += 1
-            if self.anim_tick >= 8:
+            if self.anim_tick >= 4:
                 self.anim_tick = 0
                 self.frame     = 1 - self.frame
-        
-        
 
     def draw(self, screen):
         if self.is_ducking:
@@ -248,26 +237,27 @@ class Dino:
 
     def get_rect(self):
         if self.is_ducking:
-            # shorter hitbox when ducking
-            return pygame.Rect(self.X + 4, self.y + DINO_H//2, DINO_W - 8, DINO_H//2 - 4)
-        return pygame.Rect(self.X + 4, self.y + 4, DINO_W - 8, DINO_H - 8)
+            return pygame.Rect(self.X + 8, self.y + DINO_H // 2, DINO_W - 16, DINO_H // 2 - 8)
+        return pygame.Rect(self.X + 8, self.y + 8, DINO_W - 16, DINO_H - 16)
+
 # ── Cactus ────────────────────────────────────────────────────────────────────
 class Cactus:
     TYPES = [
-        (CACTUS_PIXELS,        10,  16),   # original small
-        (CACTUS_TALL_PIXELS,   10,  20),   # tall single
-        (CACTUS_DOUBLE_PIXELS, 10,  16),   # two cacti close together
-        (CACTUS_WIDE_PIXELS,   16, 16),   # three cacti wide
+        (CACTUS_PIXELS,        8,  16),
+        (CACTUS_TALL_PIXELS,   8,  16),
+        (CACTUS_DOUBLE_PIXELS, 8,  16),
+        (CACTUS_WIDE_PIXELS,   12, 16),
     ]
 
     def __init__(self, speed):
-        grid, cols, rows  = random.choice(self.TYPES)
+        grid, cols, rows = random.choice(self.TYPES)
         self.grid  = grid
         self.w     = cols * PIXEL_SIZE
         self.h     = rows * PIXEL_SIZE
         self.x     = SCREEN_WIDTH + 10
         self.y     = GROUND_Y - self.h
         self.speed = speed
+        self.kind  = "cactus"
 
     def update(self):
         self.x -= self.speed
@@ -276,24 +266,30 @@ class Cactus:
         draw_pixel_art(screen, self.grid, self.x, self.y, (83, 83, 83))
 
     def get_rect(self):
-        return pygame.Rect(self.x + 4, self.y + 4, self.w - 8, self.h - 8)
+        return pygame.Rect(self.x + 8, self.y + 8, self.w - 16, self.h - 16)
 
     def is_off_screen(self):
         return self.x + self.w < 0
+
+# ── Bird ──────────────────────────────────────────────────────────────────────
 class Bird:
     HEIGHTS = [
-        GROUND_Y - DINO_H // 2,        # low bird — need to jump over it
-        GROUND_Y - DINO_H + 10,    # high bird — need to duck under it
+        GROUND_Y - DINO_H + 20,    # low bird — must duck
+        GROUND_Y - DINO_H - 10,    # low bird — must duck
+        GROUND_Y - DINO_H - 100,   # high bird — must jump
     ]
+
     def __init__(self, speed):
         self.x         = SCREEN_WIDTH + 10
         self.y         = random.choice(self.HEIGHTS)
-        self.speed     = speed + 1
+        self.speed     = speed + 0.5
         self.frame     = 0
         self.anim_tick = 0
+        self.kind      = "bird"
+        self.passed    = False
 
     def update(self):
-        self.x -= self.speed
+        self.x        -= self.speed
         self.anim_tick += 1
         if self.anim_tick >= 10:
             self.anim_tick = 0
@@ -304,100 +300,196 @@ class Bird:
         draw_pixel_art(screen, grid, self.x, self.y, (83, 83, 83))
 
     def get_rect(self):
-        return pygame.Rect(self.x + 4, self.y + 4, BIRD_W - 8, BIRD_H - 8)
+        return pygame.Rect(self.x + 8, self.y + 8, BIRD_W - 20, BIRD_H + 2)
 
     def is_off_screen(self):
         return self.x + BIRD_W < 0
-# ── Main ──────────────────────────────────────────────────────────────────────
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Dino Game")
-    ticker = pygame.time.Clock()
-    font   = pygame.font.SysFont(None, 36)
 
-    dino        = Dino()
-    obstacles       = []
-    score       = 0
-    speed       = 7
-    spawn_timer = 0
+# ── Game environment ──────────────────────────────────────────────────────────
+class DinoGame:
+    all_time_high = 0
 
-    running = True
-    while running:
+    def __init__(self, render=True):
+        self.render_mode = render
+        pygame.init()
+        if render:
+            self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+            pygame.display.set_caption("Dino Game")
+        else:
+            self.screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.clock = pygame.time.Clock()
+        self.font  = pygame.font.SysFont(None, 36)
+        self.reset()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE or event.key == pygame.K_UP:
-                    dino.jump()
-            if event.type == pygame.KEYDOWN:
+    def reset(self):
+        self.dino        = Dino()
+        self.obstacles   = []
+        self.score       = 0
+        self.speed       = 7
+        self.spawn_timer = 0
+        self.alive       = True
+        return self.get_state()
 
-                if event.key == pygame.K_SPACE or event.key == pygame.K_UP:
-                    dino.jump()
-                if event.key == pygame.K_DOWN:
-                    dino.duck(True)
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_DOWN:
-                    if not dino.is_jumping:
-                        dino.duck(False)
+    def get_state(self):
+        ahead = sorted(
+            [o for o in self.obstacles if o.x + o.get_rect().width > Dino.X],
+            key=lambda o: o.x
+        )
 
-        dino.update()
-
-        # spawning
-        spawn_timer += 1
-        if spawn_timer >= random.randint(60, 120):
-            if score > 300 and random.random() < 0.4:
-                obstacles.append(Bird(speed))
+        # nearest obstacle
+        if len(ahead) >= 1:
+            n    = ahead[0]
+            dist = max(0, n.x - Dino.X)
+            if n.kind == "bird":
+                obs_type = 2 if n.y < GROUND_Y - DINO_H - 20 else 1
             else:
-                obstacles.append(Cactus(speed))
-            spawn_timer = 0
+                obs_type = 0
+        else:
+            dist     = SCREEN_WIDTH
+            obs_type = 0
 
-        # update
-        for obs in obstacles:
+       
+
+        frames_away = dist / self.speed
+        dist_bucket = min(int(frames_away // 8), 11)
+
+        is_jumping  = int(self.dino.is_jumping)
+        ground_y    = GROUND_Y - DINO_H
+        jump_phase  = 0 if not self.dino.is_jumping else min(int((ground_y - self.dino.y) // 20), 3)
+        is_ducking  = int(self.dino.is_ducking)
+
+        # safety clamps
+        dist_bucket = min(dist_bucket, 11)
+        obs_type    = min(obs_type,     2)
+        is_jumping  = min(is_jumping,   1)
+        jump_phase  = min(jump_phase,   3)
+        
+
+        return (dist_bucket, obs_type, is_jumping, jump_phase, is_ducking)
+
+    def step(self, action):
+        done   = False
+        reward = 1  # per-frame survival reward
+
+        if action == 1:
+            self.dino.jump()
+        elif action == 2:
+            self.dino.duck(True)
+        else:
+            self.dino.duck(False)
+
+        self.dino.update()
+
+        self.spawn_timer += 1
+        if self.spawn_timer >= random.randint(40, 80):
+            if self.score > 100 and random.random() < 0.6:
+                # pick two different heights for the bird pair
+                
+                bird1   = Bird(self.speed)
+                bird2   = Bird(self.speed)
+                
+                low_y = max(Bird.HEIGHTS)
+                high_y = min(Bird.HEIGHTS)
+                while (
+                    bird2.y == bird1.y or (bird1.y == low_y and bird2.y == high_y) or
+                    (bird1.y == high_y and bird2.y == low_y)
+                ):
+                    bird2 = Bird(self.speed)
+                self.obstacles.append(bird1)
+                self.obstacles.append(bird2)
+            else:
+                self.obstacles.append(Cactus(self.speed))
+            self.spawn_timer = 0
+
+        for obs in self.obstacles:
             obs.update()
-        obstacles = [o for o in obstacles if not o.is_off_screen()]
 
-        score += 1
-        if score % 500 == 0:
-            speed += 1
+        # reward for passing a bird
+        low_y = max(Bird.HEIGHTS)
+        for obs in self.obstacles:
+            if obs.kind == "bird" and not obs.passed and obs.x + BIRD_W < Dino.X:
+                obs.passed = True
+                self.score += 50
+                if obs.y >= low_y - 20 and self.dino.is_ducking:
+                    self.score += 150  # correctly ducked a low bird
 
-        for obs in obstacles:
-            if dino.get_rect().colliderect(obs.get_rect()):
-                running = False
+        self.obstacles = [o for o in self.obstacles if not o.is_off_screen()]
 
-        screen.fill(WHITE)
-        pygame.draw.line(screen, BLACK, (0, GROUND_Y), (SCREEN_WIDTH, GROUND_Y), 2)
-        dino.draw(screen)
-        for obs in obstacles:
-            obs.draw(screen)
+        self.score += 1
+        if self.score % 300 == 0:
+            self.speed += 1
 
-        score_text = font.render(f"Score: {score // 10}", True, BLACK)
-        screen.blit(score_text, (SCREEN_WIDTH - 160, 20))
+        for obs in self.obstacles:
+            if self.dino.get_rect().colliderect(obs.get_rect()):
+                done       = True
+                reward     = -500
+                self.alive = False
+                break
+
+        return self.get_state(), reward, done
+
+    def render_frame(self, debug=False):
+        self.screen.fill(WHITE)
+        pygame.draw.line(self.screen, BLACK, (0, GROUND_Y), (SCREEN_WIDTH, GROUND_Y), 2)
+        self.dino.draw(self.screen)
+        for obs in self.obstacles:
+            obs.draw(self.screen)
+        score_text = self.font.render(f"Score: {self.score // 10}", True, BLACK)
+        self.screen.blit(score_text, (SCREEN_WIDTH - 160, 20))
+
+        if debug:
+            pygame.draw.rect(self.screen, (255, 0, 0), self.dino.get_rect(), 2)
+            for obs in self.obstacles:
+                pygame.draw.rect(self.screen, (0, 0, 255), obs.get_rect(), 2)
 
         pygame.display.flip()
-        ticker.tick(FPS)
+        self.clock.tick(FPS)
 
-    # game over
-    screen.fill(WHITE)
-    screen.blit(font.render("Game Over!",                   True, BLACK), (SCREEN_WIDTH//2 - 80,  100))
-    screen.blit(font.render(f"Final score: {score // 10}", True, GREY),  (SCREEN_WIDTH//2 - 80,  150))
-    screen.blit(font.render("R to restart  |  Q to quit",  True, GREY),  (SCREEN_WIDTH//2 - 160, 200))
-    pygame.display.flip()
-
-    while True:
+    def handle_quit(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
-                    main()
-                if event.key == pygame.K_q:
-                    pygame.quit()
-                    sys.exit()
 
+# ── Human play mode ───────────────────────────────────────────────────────────
+def play():
+    game = DinoGame(render=True)
+    game.reset()
+
+    while True:
+        game.handle_quit()
+
+        action = 0
+        keys   = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE] or keys[pygame.K_UP]:
+            action = 1
+        elif keys[pygame.K_DOWN]:
+            action = 2
+
+        _, _, done = game.step(action)
+        game.render_frame(debug=False) # true voor hitboxes
+
+        if done:
+            game.screen.fill(WHITE)
+            font = pygame.font.SysFont(None, 36)
+            game.screen.blit(font.render("Game Over!", True, BLACK),               (SCREEN_WIDTH//2 - 80,  100))
+            game.screen.blit(font.render(f"Score: {game.score // 10}", True, GREY),(SCREEN_WIDTH//2 - 80,  150))
+            game.screen.blit(font.render("R to restart  Q to quit", True, GREY),   (SCREEN_WIDTH//2 - 160, 200))
+            pygame.display.flip()
+
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_r:
+                            game.reset()
+                            waiting = False
+                        if event.key == pygame.K_q:
+                            pygame.quit()
+                            sys.exit()
 
 if __name__ == "__main__":
-    main()
+    play()
