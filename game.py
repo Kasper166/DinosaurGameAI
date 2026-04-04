@@ -319,6 +319,7 @@ class DinoGame:
             self.screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.font  = pygame.font.SysFont(None, 36)
+        self.curriculum_gen = 0
         self.reset()
 
     def reset(self):
@@ -336,37 +337,48 @@ class DinoGame:
             key=lambda o: o.x
         )
 
-        # nearest obstacle
         if len(ahead) >= 1:
-            n    = ahead[0]
-            dist = max(0, n.x - Dino.X)
-            if n.kind == "bird":
-                obs_type = 2 if n.y < GROUND_Y - DINO_H - 20 else 1
+            n1    = ahead[0]
+            dist1 = max(0, n1.x - Dino.X)
+            if n1.kind == "bird":
+                obs_type1   = 1
+                # Normalize bird Y: 0.0 = low (duck), 1.0 = high (jump)
+                bird_y_norm1 = (GROUND_Y - n1.y) / SCREEN_HEIGHT
             else:
-                obs_type = 0
+                obs_type1   = 0
+                bird_y_norm1 = 0.0
         else:
-            dist     = SCREEN_WIDTH
-            obs_type = 0
+            dist1        = SCREEN_WIDTH
+            obs_type1   = 0
+            bird_y_norm1 = 0.0
 
-       
+        
 
-        frames_away = dist / self.speed
-        dist_bucket = min(int(frames_away // 8), 11)
+        frames_away1 = dist1 / self.speed
+        if frames_away1 < 20:
+            dist_bucket = 0
+        elif frames_away1 < 35:
+            dist_bucket = 1
+        elif frames_away1 < 55:
+            dist_bucket = 2
+        else:
+            dist_bucket = min(3 + int((frames_away1 - 55) // 15), 11)
 
         is_jumping  = int(self.dino.is_jumping)
         ground_y    = GROUND_Y - DINO_H
         jump_phase  = 0 if not self.dino.is_jumping else min(int((ground_y - self.dino.y) // 20), 3)
         is_ducking  = int(self.dino.is_ducking)
 
-        # safety clamps
-        dist_bucket = min(dist_bucket, 11)
-        obs_type    = min(obs_type,     2)
-        is_jumping  = min(is_jumping,   1)
-        jump_phase  = min(jump_phase,   3)
+        return (
+            dist_bucket,           # 0  how far is obstacle 1
+            obs_type1,             # 1  is obstacle 1 a bird?
+            bird_y_norm1,          # 2  height of obstacle 1
+            is_jumping,            # 3  dino jumping?
+            jump_phase,            # 4  how high in the jump
+            is_ducking,            # 5  dino ducking?
+        )
+
         
-
-        return (dist_bucket, obs_type, is_jumping, jump_phase, is_ducking)
-
     def step(self, action):
         done   = False
         reward = 1  # per-frame survival reward
@@ -379,50 +391,88 @@ class DinoGame:
             self.dino.duck(False)
 
         self.dino.update()
-
+        low_y = max(Bird.HEIGHTS)
+        mid_y = Bird.HEIGHTS[1]
+        for obs in self.obstacles:
+            if obs.kind == "bird":
+                                       # bird is close and approaching
+                if obs.y == mid_y:               # low or mid bird
+                    if self.dino.is_ducking:
+                        reward += 10                  # reward every frame it stays ducked
+                    else:
+                        reward -= 30                   # penalise not ducking
+                     
         self.spawn_timer += 1
-        if self.spawn_timer >= random.randint(40, 80):
-            if self.score > 100 and random.random() < 0.6:
-                # pick two different heights for the bird pair
-                
-                bird1   = Bird(self.speed)
-                bird2   = Bird(self.speed)
-                
-                low_y = max(Bird.HEIGHTS)
-                high_y = min(Bird.HEIGHTS)
-                while (
-                    bird2.y == bird1.y or (bird1.y == low_y and bird2.y == high_y) or
-                    (bird1.y == high_y and bird2.y == low_y)
-                ):
-                    bird2 = Bird(self.speed)
-                self.obstacles.append(bird1)
-                self.obstacles.append(bird2)
-            else:
-                self.obstacles.append(Cactus(self.speed))
+        
+        if self.spawn_timer >= random.randint(40, 60):
             self.spawn_timer = 0
 
-        for obs in self.obstacles:
-            obs.update()
+        # ── Curriculum spawn logic ─────────────────────────────────────────
+            gen = self.curriculum_gen
+            if gen < 40:
+                roll = random.random()
+                if roll < 0.5:
+                    mid_bird = Bird(self.speed)
+                    mid_bird.y = Bird.HEIGHTS[1]          # mid height → duck
 
-        # reward for passing a bird
-        low_y = max(Bird.HEIGHTS)
-        for obs in self.obstacles:
-            if obs.kind == "bird" and not obs.passed and obs.x + BIRD_W < Dino.X:
-                obs.passed = True
-                self.score += 50
-                if obs.y >= low_y - 20 and self.dino.is_ducking:
-                    self.score += 150  # correctly ducked a low bird
+                    high_bird = Bird(self.speed)
+                    high_bird.x = mid_bird.x + 100        # ~180px gap behind the first
+                    high_bird.y = Bird.HEIGHTS[2]  
+                    self.obstacles.append(mid_bird)
+                    self.obstacles.append(high_bird)
+                elif roll < 0.8:
+                    self.obstacles.append(Bird(self.speed))
+                else:
+                    self.obstacles.append(Cactus(self.speed))
+            elif gen < 80:
+                roll = random.random()
+                if roll < 0.3:
+                    mid_bird = Bird(self.speed)
+                    mid_bird.y = Bird.HEIGHTS[1]          # mid height → duck
 
+                    high_bird = Bird(self.speed)
+                    high_bird.x = mid_bird.x + 100        # ~180px gap behind the first
+                    high_bird.y = Bird.HEIGHTS[2]  
+                    self.obstacles.append(mid_bird)
+                    self.obstacles.append(high_bird)
+                elif roll < 0.5:
+                    low_bird = Bird(self.speed)
+                    low_bird.y = Bird.HEIGHTS[2]
+                    self.obstacles.append(low_bird)
+                elif roll < 0.8:
+                    self.obstacles.append(Bird(self.speed))
+                else:
+                    self.obstacles.append(Cactus(self.speed))
+            else:   
+                roll = random.random()
+                if self.score > 100 and roll < 0.6:
+                    bird1 = Bird(self.speed)
+                    
+                    self.obstacles.append(bird1)
+                        
+                else:
+                    self.obstacles.append(Cactus(self.speed))
+                
+            
+            
+
+        
+        for obs in self.obstacles:
+            obs.update() 
+
+        
+ 
         self.obstacles = [o for o in self.obstacles if not o.is_off_screen()]
-
+        
         self.score += 1
-        if self.score % 300 == 0:
+        if self.score % 500 == 0:
             self.speed += 1
-
+        #print(self.speed)
         for obs in self.obstacles:
             if self.dino.get_rect().colliderect(obs.get_rect()):
+                #print("dead")
                 done       = True
-                reward     = -500
+                reward     = -200
                 self.alive = False
                 break
 
@@ -442,8 +492,9 @@ class DinoGame:
             for obs in self.obstacles:
                 pygame.draw.rect(self.screen, (0, 0, 255), obs.get_rect(), 2)
 
-        pygame.display.flip()
-        self.clock.tick(FPS)
+        if self.render_mode:
+            pygame.display.flip()
+            self.clock.tick(FPS)
 
     def handle_quit(self):
         for event in pygame.event.get():

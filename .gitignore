@@ -2,3 +2,6 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
+neat-checkpoint-*
+last_generation.pkl
+eval.log

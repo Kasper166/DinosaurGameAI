@@ -2,7 +2,14 @@ import neat
 import pickle
 import numpy as np
 import pygame
-from game import DinoGame, Dino, GROUND_Y, DINO_H, SCREEN_WIDTH, SCREEN_HEIGHT, WHITE, BLACK, GREY, FPS, draw_pixel_art, DINO_PIXELS_RUN1, DINO_PIXELS_RUN2
+from game import (DinoGame, Dino, GROUND_Y, DINO_H, SCREEN_WIDTH, SCREEN_HEIGHT,
+                  WHITE, BLACK, GREY, FPS, PIXEL_SIZE,
+                  DINO_PIXELS_RUN1, DINO_PIXELS_RUN2, DINO_PIXELS_DUCK1, DINO_PIXELS_DUCK2,
+                  draw_pixel_art, BIRD_W)
+
+COLOR_ALIVE = (83,  83,  83)
+COLOR_BEST  = (30,  120, 200)
+COLOR_LAST  = (200, 80,  80)
 
 def replay():
     config = neat.Config(
@@ -16,35 +23,79 @@ def replay():
     with open("last_generation.pkl", "rb") as f:
         genomes = pickle.load(f)
 
-    # create a network for each genome
-    nets = [(neat.nn.FeedForwardNetwork.create(genome, config), genome) for _, genome in genomes]
+    best_genome_id = max(genomes, key=lambda x: x[1].fitness or 0)[0]
+    nets = [(neat.nn.FeedForwardNetwork.create(g, config), g, gid) for gid, g in genomes]
+    n    = len(nets)
 
-    # use one shared game for obstacles/speed but track each dino separately
-    game = DinoGame(render=True)
-    state = game.reset()
+    master = DinoGame(render=True)
+    master.reset()
 
-    # create a dino for each genome
-    dinos = [Dino() for _ in range(len(nets))]
-    alive = [True] * len(nets)
-
-    clock = pygame.time.Clock()
+    dinos      = [Dino() for _ in range(n)]
+    alive      = [True] * n
+    clock      = pygame.time.Clock()
+    font_sm    = pygame.font.SysFont(None, 24)
+    font_med   = pygame.font.SysFont(None, 36)
+    font_mono  = pygame.font.SysFont("Courier New", 18)
+    fast_mode  = False
+    debug_mode = False
 
     while any(alive):
-        game.handle_quit()
 
-        for i, (net, genome) in enumerate(nets):
+        # ── Events ────────────────────────────────────────────────────────────
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_f:
+                    fast_mode = not fast_mode
+                if event.key == pygame.K_d:
+                    debug_mode = not debug_mode
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    return
+
+        master_state = master.get_state()
+
+        # ── Nearest obstacle info for debug ───────────────────────────────────
+        ahead = sorted(
+            [o for o in master.obstacles if o.x + o.get_rect().width > Dino.X],
+            key=lambda o: o.x
+        )
+        nearest = ahead[0] if ahead else None
+        if nearest:
+            if nearest.kind == "bird":
+                height_label = "HIGH" if nearest.y < GROUND_Y - DINO_H - 20 else "LOW/MID"
+                obs_desc = f"BIRD {height_label}  y={nearest.y}  dist={int(nearest.x - Dino.X)}"
+            else:
+                obs_desc = f"CACTUS  dist={int(nearest.x - Dino.X)}"
+        else:
+            obs_desc = "none"
+
+        # ── Find best original genome index ───────────────────────────────────
+        best_dino_index = next(
+            (i for i, (_, _, gid) in enumerate(nets) if gid == best_genome_id), 0
+        )
+
+        # ── Step each dino ────────────────────────────────────────────────────
+        for i, (net, genome, gid) in enumerate(nets):
             if not alive[i]:
                 continue
 
-            dino = dinos[i]
+            dino       = dinos[i]
+            
+            ground_y   = GROUND_Y - DINO_H
+            jump_phase = 0 if not dino.is_jumping else min(int((ground_y - dino.y) // 20), 3)
 
-            # get state for this dino
             inputs = (
-                state[0] / 11.0,
-                state[1] / 2.0,
-                float(dino.is_jumping),
-                float(min(int((GROUND_Y - DINO_H - dino.y) // 20), 3)) / 3.0,
+                master_state[0] / 11.0,   # dist_bucket obstacle 1
+                float(master_state[1]),   # obs_type1
+                master_state[2],          # bird_y_norm1
+                float(dino.is_jumping),   # THIS dino's jump state
+                jump_phase / 3.0,         # THIS dino's jump phase
+                float(dino.is_ducking),   # THIS dino's duck state
             )
+
             output = net.activate(inputs)
             action = int(np.argmax(output))
 
@@ -57,37 +108,128 @@ def replay():
 
             dino.update()
 
-            # check collision for this dino
-            for obs in game.obstacles:
+            for obs in master.obstacles:
                 if dino.get_rect().colliderect(obs.get_rect()):
                     alive[i] = False
                     break
 
-        # step the shared game (moves obstacles, updates score/speed)
-        state, _, _ = game.step(0)  # action 0 = do nothing for the main game dino
+        master.step(0)
 
-        # draw everything manually
-        game.screen.fill(WHITE)
-        pygame.draw.line(game.screen, BLACK, (0, GROUND_Y), (SCREEN_WIDTH, GROUND_Y), 2)
-
-        for obs in game.obstacles:
-            obs.draw(game.screen)
-
-        # draw all alive dinos
-        alive_count = sum(alive)
-        for i, dino in enumerate(dinos):
+        # ── Find best still-alive dino ────────────────────────────────────────
+        best_alive_index    = None
+        best_alive_fitness  = -1
+        for i, (_, genome, gid) in enumerate(nets):
             if alive[i]:
-                dino.draw(game.screen)
+                fit = genome.fitness or 0
+                if fit > best_alive_fitness:
+                    best_alive_fitness = fit
+                    best_alive_index   = i
 
-        # show score and alive count
-        font = pygame.font.SysFont(None, 36)
-        game.screen.blit(font.render(f"Score: {game.score // 10}", True, BLACK), (SCREEN_WIDTH - 160, 20))
-        game.screen.blit(font.render(f"Alive: {alive_count}/{len(nets)}", True, GREY), (SCREEN_WIDTH - 160, 60))
+        alive_count = sum(alive)
+
+        # ── Draw ──────────────────────────────────────────────────────────────
+        master.screen.fill(WHITE)
+        pygame.draw.line(master.screen, BLACK, (0, GROUND_Y), (SCREEN_WIDTH, GROUND_Y), 2)
+
+        for obs in master.obstacles:
+            obs.draw(master.screen)
+
+        # draw dinos (only once, with correct color)
+        for i, dino in enumerate(dinos):
+            if not alive[i]:
+                continue
+            _, genome, gid = nets[i]
+            if alive_count == 1:
+                color = COLOR_LAST
+            elif gid == best_genome_id and alive[best_dino_index]:
+                color = COLOR_BEST
+            elif i == best_alive_index and not alive[best_dino_index]:
+                color = COLOR_BEST
+            else:
+                color = COLOR_ALIVE
+            grid = (DINO_PIXELS_DUCK1 if dino.frame == 0 else DINO_PIXELS_DUCK2) if dino.is_ducking \
+                   else (DINO_PIXELS_RUN1 if dino.frame == 0 else DINO_PIXELS_RUN2)
+            draw_pixel_art(master.screen, grid, dino.X, dino.y, color)
+
+        # ── HUD ───────────────────────────────────────────────────────────────
+        master.screen.blit(font_med.render(f"Score: {master.score // 10}", True, BLACK), (SCREEN_WIDTH - 170, 16))
+        master.screen.blit(font_sm.render(f"Alive: {alive_count} / {n}",  True, GREY),  (SCREEN_WIDTH - 170, 52))
+        master.screen.blit(font_sm.render(f"Speed: {master.speed}",        True, GREY),  (SCREEN_WIDTH - 170, 76))
+        master.screen.blit(font_sm.render("F: fast ON" if fast_mode else "F: fast",
+                           True, (200, 100, 30) if fast_mode else GREY), (10, 16))
+        master.screen.blit(font_sm.render("D: debug ON" if debug_mode else "D: debug",
+                           True, (30, 150, 80) if debug_mode else GREY), (10, 40))
+
+        bar_w = 180
+        bar_x, bar_y = SCREEN_WIDTH - 170, 104
+        pygame.draw.rect(master.screen, (220, 220, 220), (bar_x, bar_y, bar_w, 8), border_radius=4)
+        fill = int(bar_w * alive_count / n)
+        if fill > 0:
+            pygame.draw.rect(master.screen, (83, 150, 83), (bar_x, bar_y, fill, 8), border_radius=4)
+
+        pygame.draw.rect(master.screen, COLOR_BEST, (10, 66, 10, 10))
+        master.screen.blit(font_sm.render("Best genome", True, GREY), (24, 64))
+        pygame.draw.rect(master.screen, COLOR_LAST, (10, 84, 10, 10))
+        master.screen.blit(font_sm.render("Last alive",  True, GREY), (24, 82))
+
+        # ── Debug overlay ──────────────────────────────────────────────────────
+        if debug_mode and best_alive_index is not None:
+            best_dino  = dinos[best_alive_index]
+            ground_y   = GROUND_Y - DINO_H
+            jump_phase = 0 if not best_dino.is_jumping else min(int((ground_y - best_dino.y) // 20), 3)
+
+            inputs = (
+                master_state[0] / 11.0,   # dist_bucket obstacle 1
+                float(master_state[1]),   # obs_type1
+                master_state[2],          # bird_y_norm1
+                float(best_dino.is_jumping),  # THIS dino's jump state
+                jump_phase / 3.0,             # THIS dino's jump phase
+                float(best_dino.is_ducking),  # THIS dino's duck state
+            )
+            output     = nets[best_alive_index][0].activate(inputs)
+            action     = int(np.argmax(output))
+            action_lbl = ["RUN", "JUMP", "DUCK"][action]
+            action_col = [BLACK, (30, 120, 200), (200, 130, 30)][action]
+
+            _, watched_genome, watched_gid = nets[best_alive_index]
+            watching_label = "best genome" if watched_gid == best_genome_id else \
+                             f"next best (fit={int(watched_genome.fitness or 0)})"
+
+            panel_x, panel_y, panel_w, panel_h = 10, SCREEN_HEIGHT - 175, 430, 165
+            panel = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+            panel.fill((240, 240, 240, 210))
+            master.screen.blit(panel, (panel_x, panel_y))
+            pygame.draw.rect(master.screen, (180, 180, 180),
+                             (panel_x, panel_y, panel_w, panel_h), 1)
+
+            def row(text, y_off, color=BLACK):
+                master.screen.blit(font_mono.render(text, True, color),
+                                   (panel_x + 8, panel_y + y_off))
+
+            row(f"── {watching_label} ──────────────────",  6,  (100, 100, 100))
+            row(f"Obstacle : {obs_desc}",                   26)
+            row(f"Inputs   : dist={inputs[0]:.2f}  "
+                f"type={inputs[1]:.0f}  "
+                f"bird_y={inputs[2]:.2f}",                  46)
+            row(f"           jump={inputs[3]:.0f}  "
+                f"phase={inputs[4]:.2f}  "
+                f"duck={inputs[5]:.0f}",                    64)
+            row(f"Outputs  : run={output[0]:.2f}  "
+                f"jump={output[1]:.2f}  "
+                f"duck={output[2]:.2f}",                    82)
+            row(f"Action   : {action_lbl}",                102, action_col)
+            row(f"State    : jumping={bool(best_dino.is_jumping)}  "
+                f"ducking={bool(best_dino.is_ducking)}",   122)
+            row(f"Fitness  : {int(watched_genome.fitness or 0)}", 142, (100, 100, 100))
+
+            pygame.draw.rect(master.screen, (255, 0, 0),   best_dino.get_rect(), 1)
+            if nearest:
+                pygame.draw.rect(master.screen, (0, 0, 255), nearest.get_rect(), 1)
 
         pygame.display.flip()
-        clock.tick(FPS)
+        clock.tick(0 if fast_mode else FPS)
 
-    print(f"All dinos dead. Final score: {game.score}")
+    print(f"All dinos dead. Final score: {master.score // 10}")
 
 if __name__ == "__main__":
     replay()
