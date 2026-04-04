@@ -2,6 +2,8 @@ import neat
 import pickle
 import pygame
 import numpy as np
+import json
+import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from game import DinoGame, Dino
@@ -113,23 +115,41 @@ def update_dashboard(generation, best_fitness, avg_fitness, num_species):
     plt.pause(0.001)
 
 
+# ── Training history helpers ──────────────────────────────────────────────────
+HISTORY_FILE = "training_history.json"
+
+def _load_history():
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+def _save_history(hist):
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(hist, f, indent=2)
+
+
 # ── NEAT evaluation ────────────────────────────────────────────────────────────
 def eval_genome(genome, config, generation=0):
     net  = neat.nn.FeedForwardNetwork.create(genome, config)
     game = DinoGame(render=False)
-    game.curriculum_gen = generation
+    game.use_score_curve = False   # keep curriculum for training
+    game.curriculum_gen  = generation
     state = game.reset()
-    done = False
+    done  = False
     frames = 0
 
     while not done:
         inputs = (
-            state[0] / 11.0,   # dist_bucket obstacle 1
-            float(state[1]),   # obs_type1
-            state[2],          # bird_y_norm1
-            float(state[3]),   # is_jumping
-            state[4] / 3.0,    # jump_phase
-            float(state[5]),   # is_ducking
+            state[0] / 11.0,
+            float(state[1]),
+            state[2],
+            float(state[3]),
+            state[4] / 3.0,
+            float(state[5]),
         )
         output = net.activate(inputs)
         action = int(np.argmax(output))
@@ -144,7 +164,7 @@ def eval_genome(genome, config, generation=0):
 def eval_genomes(genomes, config):
     best = None
     fitnesses = []
-    global current_generation 
+    global current_generation
 
     for genome_id, genome in genomes:
         genome.fitness = eval_genome(genome, config, generation=current_generation)
@@ -152,18 +172,32 @@ def eval_genomes(genomes, config):
         if best is None or genome.fitness > best.fitness:
             best = genome
 
-    # save best genome of this generation
+    best_fit    = max(fitnesses)
+    avg_fit     = sum(fitnesses) / len(fitnesses)
+    num_species = len(config.species_set.species) if hasattr(config, 'species_set') else 0
+    gen_number  = current_generation + 1
+
+    # ── Persist best genome ────────────────────────────────────────────────────
     with open("best_genome.pkl", "wb") as f:
         pickle.dump(best, f)
     with open("last_generation.pkl", "wb") as f:
         pickle.dump(genomes, f)
 
-    # update live dashboard
-    
-    best_fit    = max(fitnesses)
-    avg_fit     = sum(fitnesses) / len(fitnesses)
-    num_species = len(config.species_set.species) if hasattr(config, 'species_set') else 0
-    update_dashboard(current_generation+1, best_fit, avg_fit, num_species)
+    # ── Write metadata for analytics screen ───────────────────────────────────
+    with open("best_genome_meta.json", "w") as f:
+        json.dump({"generation": gen_number, "fitness": int(best_fit)}, f)
+
+    hist = _load_history()
+    hist.append({
+        "gen":     gen_number,
+        "best":    int(best_fit),
+        "avg":     int(avg_fit),
+        "species": num_species,
+    })
+    _save_history(hist)
+
+    # ── Update live matplotlib dashboard ──────────────────────────────────────
+    update_dashboard(gen_number, best_fit, avg_fit, num_species)
 
     current_generation += 1
 

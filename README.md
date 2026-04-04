@@ -1,70 +1,173 @@
-# Dinosaur Game AI 🦖 🤖
+# 🦖 Dinosaur Game AI
 
-A custom Pygame clone of the classic Chrome Dinosaur game played entirely by a neural network, trained from scratch using the **NeuroEvolution of Augmenting Topologies (NEAT)** algorithm.
+[![Streamlit Dashboard](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![NEAT-Python](https://img.shields.io/badge/NEAT--Python-0.92-4CAF50)](https://neat-python.readthedocs.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+A pixel-perfect Pygame clone of the Chrome Dinosaur game where a neural network — evolved entirely from scratch using **NEAT (NeuroEvolution of Augmenting Topologies)** — learns to survive indefinitely at any speed.
 
 ![Demo GIF](demo.gif)
 
-## 📌 Project Overview
-The goal of this project is to develop an AI that can survive indefinitely in the game. The AI controls a dinosaur and must choose to either **Run, Jump, or Duck** at each frame to avoid upcoming obstacles (cacti or birds flying at different heights). 
+---
 
-Through thousands of simulated games and genetic evolution, the neural network learns to interpret the pixel distances and heights perfectly, successfully clearing obstacles at any game speed.
+## 📌 Project Overview
+
+The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame to avoid cacti and birds flying at three different heights. Through thousands of simulated games and genetic evolution the network learns to read pixel distances and heights perfectly, clearing all obstacles at maximum game speed.
+
+---
+
+## 🎮 Play Modes
+
+| Key | Mode | Description |
+|-----|------|-------------|
+| `SPACE` | **Manual** | You play solo — real Chrome Dino difficulty curve |
+| `A` | **Play vs AI** | You and the best genome run side by side |
+| `W` | **Watch AI** | The best genome plays autonomously (press `F` for fast-forward) |
+| `D` | **Spectator** | Watch the entire last training generation evolve in real-time |
+
+### Post-Game Analytics
+After every game a built-in analytics screen shows:
+- Your score vs the AI's all-time best and average fitness
+- An inline bar chart of best/avg fitness per generation
+- Which generation first surpassed your score
+
+---
 
 ## 🧠 How the AI Works
 
-### The Neural Network Inputs & Outputs
-Each agent is powered by a feed-forward neural network. Every frame, the game environment feeds the network **9 inputs**:
-- The distance bucket to the nearest obstacle.
-- The type of the nearest obstacle (Bird vs. Cactus).
-- The normalized Y-height of the bird (if applicable).
-- The dinosaur's current physical state (whether it is currently jumping or ducking).
-- The specific phase/height of the dinosaur's jump.
-- Information about the next upcoming obstacle.
+### Neural Network — Inputs & Outputs
 
-The network then calculates the probabilities and activates one of **3 outputs**:
-- **0**: Do nothing (Run)
-- **1**: Jump
-- **2**: Duck
+Each agent uses a feed-forward network evaluated every frame with **6 inputs**:
+
+| Input | Description |
+|-------|-------------|
+| Distance bucket | Discretised frames-to-obstacle (0 = imminent → 11 = far) |
+| Obstacle type | 0 = Cactus · 1 = Bird |
+| Bird Y (normalised) | Height of the approaching bird relative to screen |
+| Is jumping | 1 if the dino is airborne |
+| Jump phase | Height stage during current jump (0–3) |
+| Is ducking | 1 if currently crouching |
+
+**3 outputs:** `0` Run · `1` Jump · `2` Duck
 
 ### Training with NEAT
-The AI was trained using the `neat-python` library with a population size of 450 per generation.
-- **Fitness:** Evaluated simply by how many frames an agent survives without dying.
-- **Natural Selection:** The worst-performing neural networks are eliminated, while the best reproduce and mutate to form the next generation.
-- **Dynamic Curriculum Learning:** To prevent the AI from adopting a lazy strategy of "always jumping" and failing to bird obstacles, the environment actively manipulates obstacle heights during early generations. Low/Mid birds are spawned early on to explicitly teach the network when to duck.
 
-## 🚀 Running the Project Locally
+| Parameter | Value |
+|-----------|-------|
+| Population | 450 genomes / generation |
+| Fitness | Frames survived (capped at 20 000) |
+| Speed (training) | Starts at 7, `+1` every 500 frames |
+| Speed (human play) | Starts at 6.0, `+0.5` every 200 display-score points |
+| Bird spawn gate (human) | No birds until display score ≥ 300 |
 
-### Requirements
-- Python 3.10+
-- `pygame`
-- `neat-python`
-- `numpy`
-- `matplotlib` (for training visualization)
+**Dynamic Curriculum Learning** — mid/low birds appear early in training so the network is forced to learn ducking before it can rely on always jumping.
 
-### Play the Game (Human Mode)
-Want to try it yourself before watching the AI?
+---
+
+## 🚀 Running Locally
+
+### 1 · Install
+
+```bash
+git clone https://github.com/Kasper166/DinosaurGameAI
+cd DinosaurGameAI
+pip install -r requirements.txt
+```
+
+### 2 · Play (human mode)
+
 ```bash
 python game.py
 ```
-*(Use `UP`/`SPACE` to jump and `DOWN` to duck)*
 
-### Watch the Trained AI
-To load the fully trained best genome (`best_genome.pkl`) and watch it play flawlessly:
+Controls: `↑` / `SPACE` jump · `↓` duck · `T` toggle AI ghost · `ESC` menu
+
+### 3 · Watch the Trained AI
+
 ```bash
-python replay.py
+python game.py    # press [W] — Watch AI
 ```
-*(Press `F` to enable Fast Mode and `D` to toggle the neural network's live Debug overlay!)*
 
-### Train Your Own AI
-Launch the training dashboard to start an evolutionary process from scratch:
+Or watch the full last generation (Spectator mode):
+
+```bash
+python replay.py  # F = fast mode · D = debug overlay · ESC = quit
+```
+
+### 4 · Train Your Own AI
+
 ```bash
 python neat_train.py
 ```
-A live `matplotlib` dashboard will open showing fitness graphs and tables for real-time tracking!
 
-## 🔧 Built With
-* [Python 3](https://www.python.org/)
-* [Pygame](https://www.pygame.org/)
-* [NEAT-Python](https://neat-python.readthedocs.io/en/latest/)
+A live matplotlib dashboard opens showing fitness graphs per generation.
+Checkpoints are saved every 10 generations; training auto-resumes from the latest.
 
 ---
-*Created as a portfolio piece showing competency in applying Reinforcement Learning principles, Neural Networks, and evolutionary algorithms to classical control environments.*
+
+## 🌐 Web & Dashboard
+
+### Streamlit Analytics Dashboard
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Shows training progress charts, leaderboard, stats cards, and run instructions.
+
+**Deploy free in 60 seconds:**
+1. Push repo to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io) → New app
+3. Select repo → `streamlit_app.py` → Deploy ✅
+
+### Browser-Playable Build (Pygbag)
+
+The human-play mode can be packaged for the browser with Pygbag:
+
+```bash
+pip install pygbag
+python -m pygbag --build main.py     # outputs build/web/
+```
+
+> **Note:** The AI inference modes (Watch AI, Spectator) are desktop-only because
+> `neat-python` and `numpy` do not have official WebAssembly wheels.
+
+Upload `build/web/` to [itch.io](https://itch.io) as an **HTML5 project** with
+*"This file will be played in the browser"* enabled.
+
+---
+
+## 📁 Project Structure
+
+```
+DinosaurGameAI/
+├── game.py              # Core Pygame engine — all play modes + analytics screen
+├── main.py              # Async Pygbag entry point (browser build)
+├── neat_train.py        # NEAT training loop + live matplotlib dashboard
+├── replay.py            # Full-population spectator mode (standalone)
+├── streamlit_app.py     # Web analytics dashboard
+├── neat_config.txt      # NEAT hyperparameters
+├── best_genome.pkl      # Saved best genome
+├── best_genome_meta.json# Generation + fitness metadata
+├── last_generation.pkl  # Last full generation (for Spectator mode)
+├── training_history.json# Per-generation stats (auto-generated by training)
+├── demo.gif             # Demo animation for README / dashboard
+└── requirements.txt
+```
+
+---
+
+## 🔧 Built With
+
+- [Python 3](https://www.python.org/)
+- [Pygame](https://www.pygame.org/)
+- [NEAT-Python](https://neat-python.readthedocs.io/)
+- [NumPy](https://numpy.org/)
+- [Matplotlib](https://matplotlib.org/)
+- [Streamlit](https://streamlit.io/)
+- [Altair](https://altair-viz.github.io/)
+
+---
+
+*Created as a portfolio piece demonstrating Reinforcement Learning principles, evolutionary algorithms, and classical control environments in Python.*
