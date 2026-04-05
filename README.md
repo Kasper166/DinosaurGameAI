@@ -26,13 +26,14 @@ The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame
 
 ---
 
+## Watch one entire generation play
+[![Watch the AI Play](https://img.youtube.com/vi/https://www.youtube.com/watch?v=RbqzpCAndYE/0.jpg)](https://www.youtube.com/watch?v=RbqzpCAndYE)
+
 ## 🎮 Play Modes
 
 | Key | Mode | Description |
 |-----|------|-------------|
 | `SPACE` | **Manual** | You play solo — real Chrome Dino difficulty curve. You can click `T` to play alongside the best genome |
-| `A` | **Play vs AI** | You and the best genome run side by side |
-| `W` | **Watch AI** | The best genome plays autonomously (press `F` for fast-forward) |
 | `D` | **Spectator** | Watch the entire last training generation evolve in real-time |
 
 ### Post-Game Analytics
