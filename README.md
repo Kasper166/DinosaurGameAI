@@ -1,5 +1,6 @@
 # 🦖 Dinosaur Game AI
 
+[![Play in Browser](https://img.shields.io/badge/Play%20in%20Browser-%F0%9F%8E%AE-blue)](https://kasper166.github.io/Dinosaur/)
 [![Streamlit Dashboard](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![NEAT-Python](https://img.shields.io/badge/NEAT--Python-0.92-4CAF50)](https://neat-python.readthedocs.io/)
@@ -8,6 +9,14 @@
 A pixel-perfect Pygame clone of the Chrome Dinosaur game where a neural network — evolved entirely from scratch using **NEAT (NeuroEvolution of Augmenting Topologies)** — learns to survive indefinitely at any speed.
 
 ![Demo GIF](demo.gif)
+
+---
+
+## 🕹️ Play the Game
+
+You can play the game directly in your browser by clicking the "Play in Browser" button above. This version is made possible by `pygbag`, which cross-compiles the Pygame code to run in a web browser.
+
+**Note:** The browser version only supports human play. The AI features (watching the AI play, training the AI) are only available when running the game on your desktop.
 
 ---
 
