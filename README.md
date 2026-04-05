@@ -27,7 +27,7 @@ The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame
 ---
 
 ## Watch one entire generation play
-[![Watch the AI Play](https://img.youtube.com/vi/https://www.youtube.com/watch?v=RbqzpCAndYE/0.jpg)](https://www.youtube.com/watch?v=RbqzpCAndYE)
+[![Watch the AI Play](https://img.youtube.com/vi/RbqzpCAndYE/0.jpg)](https://www.youtube.com/watch?v=RbqzpCAndYE)
 
 ## 🎮 Play Modes
 
