@@ -26,12 +26,16 @@ The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame
 
 ---
 
-## Watch one entire generation play
-Here is a demo of when you would run game.py
+📺 Project Demos
+1. Training Performance (game.py)
+This demonstrates a high-performing generation navigating obstacles at increasing speeds. The AI has learned to prioritize jump timing and ducking transitions based on real-time distance calculations.
 [![Watch the AI Play](https://img.youtube.com/vi/RbqzpCAndYE/0.jpg)](https://www.youtube.com/watch?v=RbqzpCAndYE)
 
-Here is a demo of when you run replay.py I used this one to debug my code. I could see how my AI thinks.
-![DEMO GIF](Demo replay.py.gif)
+
+2. Neural Network Debugger (replay.py)
+I developed this "Spectator Mode" to visualize the AI's decision-making process. It allows for real-time debugging by overlaying the network's perception—helping to verify how the genome reacts to specific obstacle patterns.
+
+![DEMO GIF](Demo_replay.gif)
 
 ## 🎮 Play Modes
 
