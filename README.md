@@ -1,6 +1,6 @@
 # 🦖 Dinosaur Game AI
 
-[![Play in Browser](https://img.shields.io/badge/Play%20in%20Browser-%F0%9F%8E%AE-blue)](https://kasper166.github.io/Dinosaur/)
+[![Play in Browser](https://img.shields.io/badge/Play%20in%20Browser-%F0%9F%8E%AE-blue)]( https://kasper166.github.io/DinosaurGameAI/)
 [![Streamlit Dashboard](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![NEAT-Python](https://img.shields.io/badge/NEAT--Python-0.92-4CAF50)](https://neat-python.readthedocs.io/)
