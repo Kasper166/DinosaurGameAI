@@ -207,13 +207,13 @@ BIRD_H     =  5 * PIXEL_SIZE
 
 # ── Difficulty curve (score-based, for human/AI play) ────────────────────────
 # display_score = score // 10
-BIRD_SCORE_GATE   = 300    # display score before birds appear
+BIRD_SCORE_GATE   = 10    # display score before birds appear
 SPEED_START       = 6.0
 SPEED_MAX         = 18.0
-SPEED_INCREMENT   = 0.5    # added every SPEED_STEP display-score points
+SPEED_INCREMENT   = 1.0    # added every SPEED_STEP display-score points
 SPEED_STEP        = 200    # display-score interval between speed bumps
-SPAWN_MIN         = 35     # frames
-SPAWN_MAX_START   = 90     # frames at speed start
+SPAWN_MIN         = 45     # Increased for easier AI learning
+SPAWN_MAX_START   = 100    # More spacing
 
 
 def _spawn_interval_for_speed(speed):
@@ -282,8 +282,9 @@ class Dino:
 
     def get_rect(self):
         if self.is_ducking:
-            return pygame.Rect(self.X + 8, self.y + DINO_H // 2, DINO_W - 16, DINO_H // 2 - 8)
-        return pygame.Rect(self.X + 8, self.y + 8, DINO_W - 16, DINO_H - 16)
+            # Use a hitbox that matches the ducking sprite's visual dimensions.
+            return pygame.Rect(self.X, self.y + DINO_H // 2, DINO_W, DINO_H // 2)
+        return pygame.Rect(self.X, self.y, DINO_W, DINO_H)
 
 
 # ── Cactus ────────────────────────────────────────────────────────────────────
@@ -312,7 +313,7 @@ class Cactus:
         draw_pixel_art(screen, self.grid, self.x, self.y, (83, 83, 83))
 
     def get_rect(self):
-        return pygame.Rect(self.x + 8, self.y + 8, self.w - 16, self.h - 16)
+        return pygame.Rect(self.x, self.y, self.w, self.h)
 
     def is_off_screen(self):
         return self.x + self.w < 0
@@ -322,7 +323,7 @@ class Cactus:
 class Bird:
     # Ground-level (must duck), mid (must duck), high (run under freely)
     HEIGHTS = [
-        GROUND_Y - DINO_H + 20,          # low  – must duck
+        GROUND_Y - DINO_H + 20,          # low  – must jump
         GROUND_Y - DINO_H - 10,          # mid  – must duck
         GROUND_Y - DINO_H - 100,         # high – run under
     ]
@@ -335,6 +336,8 @@ class Bird:
         self.anim_tick = 0
         self.kind      = "bird"
         self.passed    = False
+        self.w         = BIRD_W
+        self.h         = BIRD_H
 
     def update(self):
         self.x        -= self.speed
@@ -348,7 +351,7 @@ class Bird:
         draw_pixel_art(screen, grid, self.x, self.y, (83, 83, 83))
 
     def get_rect(self):
-        return pygame.Rect(self.x + 8, self.y + 8, BIRD_W - 20, BIRD_H + 2)
+        return pygame.Rect(self.x, self.y, self.w, self.h)
 
     def is_off_screen(self):
         return self.x + BIRD_W < 0
@@ -378,12 +381,13 @@ class DinoGame:
         self.score          = 0
         self.alive          = True
         self.spawn_timer    = 0
-        self._next_spawn    = random.randint(60, 90)
+        self._next_spawn    = random.randint(30, 50)
         self._last_speed_milestone = 0
         if self.use_score_curve:
             self.speed = SPEED_START
         else:
             self.speed = 7
+        self._last_dino_y = self.dino.y
         return self.get_state()
 
     # ── Spawn logic ───────────────────────────────────────────────────────────
@@ -391,97 +395,85 @@ class DinoGame:
         display_score = self.score // 10
         bird_ok = display_score >= BIRD_SCORE_GATE
 
+        # The logic for spawning obstacles based on whether it's for human play or AI training.
         if self.use_score_curve:
-            if not bird_ok:
-                # Only cacti before score gate
+            roll = random.random()
+            # Clusters can now spawn from the beginning.
+            
+            # Birds only appear after a certain score.
+            if bird_ok and roll < 0.40: # 25% chance for a bird (0.40 - 0.15)
+                self.obstacles.append(Bird(self.speed))
+            # Default to a single cactus.
+            else: # 60% chance for a cactus
                 self.obstacles.append(Cactus(self.speed))
-            else:
-                roll = random.random()
-                if roll < 0.55:
-                    self.obstacles.append(Cactus(self.speed))
-                elif roll < 0.85:
-                    self.obstacles.append(Bird(self.speed))
-                else:
-                    # Double-cactus cluster (two cacti close together)
-                    c1 = Cactus(self.speed)
-                    c2 = Cactus(self.speed)
-                    c2.x = c1.x + c1.w + random.randint(20, 50)
-                    self.obstacles.append(c1)
-                    self.obstacles.append(c2)
         else:
-            # Curriculum-based (for NEAT training)
+            # Progressive curriculum for NEAT training
             gen = self.curriculum_gen
             roll = random.random()
-            if gen < 40:
+            
+            if gen < 10:
+                
                 if roll < 0.5:
-                    mid_bird = Bird(self.speed)
-                    mid_bird.y = Bird.HEIGHTS[1]
-                    high_bird = Bird(self.speed)
-                    high_bird.x = mid_bird.x + 100
-                    high_bird.y = Bird.HEIGHTS[2]
-                    self.obstacles.extend([mid_bird, high_bird])
-                elif roll < 0.8:
-                    self.obstacles.append(Bird(self.speed))
+                    # Phase 0: PURE DUCKING (100% Birds)
+                    bird = Bird(self.speed)
+                    bird.y = Bird.HEIGHTS[2] # Forced Mid-Height
+                    self.obstacles.append(bird)
+                elif roll < 0.8: 
+                    bird = Bird(self.speed)
+                    bird.y = Bird.HEIGHTS[0] # Forced Mid-Height
+                    self.obstacles.append(bird)
+                else:
+                    bird = Bird(self.speed)
+                    bird.y = Bird.HEIGHTS[1] # Forced Mid-Height
+                    self.obstacles.append(bird)
+            elif gen < 26:
+                # Phase 1: Mostly Birds + Some Cacti
+                if roll < 0.7:
+                    bird = Bird(self.speed)
+                    self.obstacles.append(bird)
                 else:
                     self.obstacles.append(Cactus(self.speed))
-            elif gen < 80:
+
+            else:
+                # Phase 2: Simple mix with clusters
                 if roll < 0.3:
-                    mid_bird = Bird(self.speed)
-                    mid_bird.y = Bird.HEIGHTS[1]
-                    high_bird = Bird(self.speed)
-                    high_bird.x = mid_bird.x + 100
-                    high_bird.y = Bird.HEIGHTS[2]
-                    self.obstacles.extend([mid_bird, high_bird])
-                elif roll < 0.5:
-                    low_bird = Bird(self.speed)
-                    low_bird.y = Bird.HEIGHTS[2]
-                    self.obstacles.append(low_bird)
-                elif roll < 0.8:
                     self.obstacles.append(Bird(self.speed))
-                else:
-                    self.obstacles.append(Cactus(self.speed))
-            else:
-                if self.score > 100 and roll < 0.6:
-                    self.obstacles.append(Bird(self.speed))
+                
                 else:
                     self.obstacles.append(Cactus(self.speed))
 
-    def get_state(self):
-        ahead = sorted(
-            [o for o in self.obstacles if o.x + o.get_rect().width > Dino.X],
-            key=lambda o: o.x
-        )
-
-        if ahead:
-            n1    = ahead[0]
-            dist1 = max(0, n1.x - Dino.X)
-            if n1.kind == "bird":
-                obs_type1    = 1
-                bird_y_norm1 = (GROUND_Y - n1.y) / SCREEN_HEIGHT
+    def get_state(self, dino=None):
+        if dino is None: dino = self.dino
+            
+        ahead = sorted([o for o in self.obstacles if o.x + o.w > Dino.X], key=lambda o: o.x)
+        sensors = [0.0] * 5
+        
+        # 0: DIST 1 (0.0 to 1.0)
+        if len(ahead) > 0:
+            o = ahead[0]
+            sensors[0] = (o.x - Dino.X) / SCREEN_WIDTH
+            # 1: TYPE 1 (Cactus=0.5, Bird=1.0)
+            sensors[1] = 0.5 if o.kind == "cactus" else 1.0
+        # 2: SIZE 1 (More spread for birds: 0.2, 0.5, 0.8)
+        if len(ahead) > 0:
+            o = ahead[0]
+            if o.kind == "cactus":
+                sensors[2] = o.w / 100.0
             else:
-                obs_type1    = 0
-                bird_y_norm1 = 0.0
+                h = GROUND_Y - o.y
+                if h < 55: sensors[2] = 0.2     # Low Bird (h=44)
+                elif h < 110: sensors[2] = 0.5   # Mid Bird (h=74)
+                else: sensors[2] = 0.8          # High Bird (h=164)
         else:
-            dist1        = SCREEN_WIDTH
-            obs_type1    = 0
-            bird_y_norm1 = 0.0
-
-        frames_away1 = dist1 / max(self.speed, 1)
-        if frames_away1 < 20:
-            dist_bucket = 0
-        elif frames_away1 < 35:
-            dist_bucket = 1
-        elif frames_away1 < 55:
-            dist_bucket = 2
-        else:
-            dist_bucket = min(3 + int((frames_away1 - 55) // 15), 11)
-
-        is_jumping  = int(self.dino.is_jumping)
-        ground_y    = GROUND_Y - DINO_H
-        jump_phase  = 0 if not self.dino.is_jumping else min(int((ground_y - self.dino.y) // 20), 3)
-        is_ducking  = int(self.dino.is_ducking)
-
-        return (dist_bucket, obs_type1, bird_y_norm1, is_jumping, jump_phase, is_ducking)
+            sensors[2] = 0.0
+            
+        # 3: DINO Y
+        sensors[3] = (GROUND_Y - dino.y) / 150.0
+        
+        # 4: SPEED
+        sensors[4] = (self.speed - SPEED_START) / (SPEED_MAX - SPEED_START)
+        
+        return tuple(sensors)
 
     def step(self, action):
         done   = False
@@ -496,15 +488,15 @@ class DinoGame:
 
         self.dino.update()
 
-        # Duck bonus shaping (training only)
+        # Ducking Reward Shaping (Crucial for learning Mid-Birds)
         mid_y = Bird.HEIGHTS[1]
         for obs in self.obstacles:
-            if obs.kind == "bird" and obs.y == mid_y:
-                if self.dino.is_ducking:
-                    reward += 10
-                else:
-                    reward -= 30
-
+            if obs.kind == "bird" and abs(obs.x - self.dino.X) < 100:
+                if obs.y == mid_y:
+                    if self.dino.is_ducking:
+                        reward += 0.5   # Small continuous bonus for doing it right
+                    elif not self.dino.is_jumping:
+                        reward -= 1.0   # Penalty for standing still under a mid-bird
         # Speed ramp (score-based curve)
         self.score += 1
         if self.use_score_curve:
@@ -528,6 +520,10 @@ class DinoGame:
         # Update & prune
         for obs in self.obstacles:
             obs.update()
+            if not getattr(obs, 'passed', False) and obs.x < self.dino.X:
+                obs.passed = True
+                reward += 50.0  # Big bonus for successfully clearing an obstacle
+
         self.obstacles = [o for o in self.obstacles if not o.is_off_screen()]
 
         # Collision — tight inner loop
@@ -596,20 +592,76 @@ def load_ai():
         return None, 0, 0
 
 
-def get_ai_action(net, master_state, dino):
-    """Compute AI action for a given dino and shared world state."""
-    ground_y   = GROUND_Y - DINO_H
-    jump_phase = 0 if not dino.is_jumping else min(int((ground_y - dino.y) // 20), 3)
-    inputs = (
-        master_state[0] / 11.0,
-        float(master_state[1]),
-        master_state[2],
-        float(dino.is_jumping),
-        jump_phase / 3.0,
-        float(dino.is_ducking),
-    )
+def get_ai_action(net, game, dino):
+    """Compute AI action for a specific dino using current game state."""
+    inputs = game.get_state(dino)
     output = net.activate(inputs)
     return int(np.argmax(output))
+
+# ── Visual Analytics ──────────────────────────────────────────────────────────
+def draw_network(screen, net, pos=(650, 16), size=(230, 140)):
+    """Render the neural network with a professional blue color palette."""
+    if not net: return
+    x, y = pos
+    w, h = size
+    
+    # Simple transluscent backdrop
+    surface = pygame.Surface((w, h), pygame.SRCALPHA)
+    pygame.draw.rect(surface, (255, 255, 255, 180), (0, 0, w, h), border_radius=10)
+    pygame.draw.rect(surface, (200, 200, 200, 255), (0, 0, w, h), 1, border_radius=10)
+    screen.blit(surface, (x, y))
+    
+    # Node mapping
+    node_positions = {}
+    input_ids = sorted([i for i in net.input_nodes])
+    output_ids = sorted([o for o in net.output_nodes])
+    
+    # Position sensors (left)
+    for i, nid in enumerate(input_ids):
+        node_positions[nid] = (x + 20, y + 20 + i * (h - 40) / max(1, len(input_ids) - 1))
+    
+    # Position actions (right)
+    for i, nid in enumerate(output_ids):
+        node_positions[nid] = (x + w - 20, y + 28 + i * (h - 56) / max(1, len(output_ids) - 1))
+        
+    # Draw connections
+    for node_id, _, _, _, _, links in net.node_evals:
+        if node_id not in node_positions:
+            node_positions[node_id] = (x + w/2, y + h/2 + (node_id * 12 % (h-40)))
+            
+        target_pos = node_positions[node_id]
+        for input_id, weight in links:
+            if input_id in node_positions:
+                start_pos = node_positions[input_id]
+                # Professional blue tones: light for positive, dark for negative
+                color = (100, 180, 255) if weight > 0 else (40, 80, 160)
+                thickness = int(max(1, min(5, abs(weight) * 2)))
+                pygame.draw.line(screen, color, start_pos, target_pos, thickness)
+
+    SENSOR_LABELS = { 
+        -1: "DIST1", -2: "TYPE1", -3: "SIZE1", -4: "DINO_Y", -5: "SPEED"
+    }
+    ACTION_LABELS = { 0: "RUN", 1: "JUMP", 2: "DUCK" }
+    
+    # Draw nodes
+    font = pygame.font.SysFont(None, 18)
+    for nid, pos in node_positions.items():
+        pygame.draw.circle(screen, (30, 120, 255), (int(pos[0]), int(pos[1])), 6)
+        pygame.draw.circle(screen, (0, 0, 0), (int(pos[0]), int(pos[1])), 6, 1)
+        
+        # Node Labels
+        lbl_text = ""
+        if nid in SENSOR_LABELS:
+            lbl_text = SENSOR_LABELS[nid]
+            screen.blit(font.render(lbl_text, True, (80, 80, 80)), (pos[0] - 35, pos[1] - 5))
+        elif nid in ACTION_LABELS:
+            lbl_text = ACTION_LABELS[nid]
+            screen.blit(font.render(lbl_text, True, (80, 80, 80)), (pos[0] + 12, pos[1] - 5))
+
+    # General Labels
+    title_font = pygame.font.SysFont(None, 14, bold=True)
+    screen.blit(title_font.render("SENSORS", True, (150, 150, 150)), (x + 10, y + 5))
+    screen.blit(title_font.render("ACTIONS", True, (150, 150, 150)), (x + w - 60, y + 5))
 
 
 def step_extra_dino(dino, action, obstacles):
@@ -831,7 +883,7 @@ def play(show_ai=False):
         state      = game.get_state()
 
         if ai_alive and net:
-            ai_action = get_ai_action(net, state, ai_dino)
+            ai_action = get_ai_action(net, game, ai_dino)
             dead      = step_extra_dino(ai_dino, ai_action, game.obstacles)
             if dead:
                 ai_alive = False
@@ -841,6 +893,7 @@ def play(show_ai=False):
             if show_ai_dino and net:
                 col = BLUE if ai_alive else (180, 180, 220)
                 ai_dino.draw(surf, col)
+                draw_network(surf, net)
             hint_font = pygame.font.SysFont(None, 22)
             hint_col  = (30, 130, 200) if show_ai_dino else GREY
             label     = "T: hide AI" if show_ai_dino else "T: show AI"
@@ -902,7 +955,7 @@ def play_vs_ai():
         state      = game.get_state()
 
         if ai_alive:
-            ai_action = get_ai_action(net, state, ai_dino)
+            ai_action = get_ai_action(net, game, ai_dino)
             dead      = step_extra_dino(ai_dino, ai_action, game.obstacles)
             if dead:
                 ai_alive = False
@@ -911,6 +964,7 @@ def play_vs_ai():
         def extra(surf):
             col = BLUE if ai_alive else (180, 180, 220)
             ai_dino.draw(surf, col)
+            draw_network(surf, net)
             font_sm = pygame.font.SysFont(None, 22)
             gen_str = f"Gen {ai_gen}" if ai_gen else "AI"
             surf.blit(font_sm.render(f"■ {gen_str}", True, BLUE),        (10, 16))
@@ -956,11 +1010,11 @@ def play_best_genome():
                 if event.key == pygame.K_f:
                     fast_mode = not fast_mode
 
-        state = game.get_state()
-        action = get_ai_action(net, state, game.dino)
+        action = get_ai_action(net, game, game.dino)
         _, _, done = game.step(action)
 
         def extra(surf):
+            draw_network(surf, net)
             font_sm = pygame.font.SysFont(None, 22)
             gen_str = f"Gen {ai_gen}" if ai_gen else "AI"
             fit_str = f"Fitness: {ai_fit // 10:,}" if ai_fit else ""
@@ -1051,18 +1105,7 @@ def demo_generation():
             if not alive[i]:
                 continue
             dino = dinos[i]
-            ground_y   = GROUND_Y - DINO_H
-            jump_phase = 0 if not dino.is_jumping else min(int((ground_y - dino.y) // 20), 3)
-            inputs = (
-                master_state[0] / 11.0,
-                float(master_state[1]),
-                master_state[2],
-                float(dino.is_jumping),
-                jump_phase / 3.0,
-                float(dino.is_ducking),
-            )
-            output = net.activate(inputs)
-            action = int(np.argmax(output))
+            action = get_ai_action(net, master, dino)
             if step_extra_dino(dino, action, master.obstacles):
                 alive[i] = False
 
@@ -1076,13 +1119,16 @@ def demo_generation():
                 if fit > best_alive_fitness:
                     best_alive_fitness = fit
                     best_alive_index   = i
-
         alive_count = sum(alive)
 
         master.screen.fill(WHITE)
         pygame.draw.line(master.screen, BLACK, (0, GROUND_Y), (SCREEN_WIDTH, GROUND_Y), 2)
         for obs in master.obstacles:
             obs.draw(master.screen)
+        
+        # Draw network for the best current survivor
+        if best_alive_index is not None:
+            draw_network(master.screen, nets[best_alive_index][0])
 
         for i, dino in enumerate(dinos):
             if not alive[i]:

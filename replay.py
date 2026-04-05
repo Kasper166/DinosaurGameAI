@@ -84,17 +84,7 @@ def replay():
 
             dino       = dinos[i]
             
-            ground_y   = GROUND_Y - DINO_H
-            jump_phase = 0 if not dino.is_jumping else min(int((ground_y - dino.y) // 20), 3)
-
-            inputs = (
-                master_state[0] / 11.0,   # dist_bucket obstacle 1
-                float(master_state[1]),   # obs_type1
-                master_state[2],          # bird_y_norm1
-                float(dino.is_jumping),   # THIS dino's jump state
-                jump_phase / 3.0,         # THIS dino's jump phase
-                float(dino.is_ducking),   # THIS dino's duck state
-            )
+            inputs = master.get_state(dino)
 
             output = net.activate(inputs)
             action = int(np.argmax(output))
@@ -177,19 +167,11 @@ def replay():
             best_dino  = dinos[best_alive_index]
             ground_y   = GROUND_Y - DINO_H
             jump_phase = 0 if not best_dino.is_jumping else min(int((ground_y - best_dino.y) // 20), 3)
-
-            inputs = (
-                master_state[0] / 11.0,   # dist_bucket obstacle 1
-                float(master_state[1]),   # obs_type1
-                master_state[2],          # bird_y_norm1
-                float(best_dino.is_jumping),  # THIS dino's jump state
-                jump_phase / 3.0,             # THIS dino's jump phase
-                float(best_dino.is_ducking),  # THIS dino's duck state
-            )
+            
+            inputs = master.get_state(best_dino)
             output     = nets[best_alive_index][0].activate(inputs)
             action     = int(np.argmax(output))
             action_lbl = ["RUN", "JUMP", "DUCK"][action]
-            action_col = [BLACK, (30, 120, 200), (200, 130, 30)][action]
 
             _, watched_genome, watched_gid = nets[best_alive_index]
             watching_label = "best genome" if watched_gid == best_genome_id else \
@@ -208,19 +190,16 @@ def replay():
 
             row(f"── {watching_label} ──────────────────",  6,  (100, 100, 100))
             row(f"Obstacle : {obs_desc}",                   26)
-            row(f"Inputs   : dist={inputs[0]:.2f}  "
-                f"type={inputs[1]:.0f}  "
-                f"bird_y={inputs[2]:.2f}",                  46)
-            row(f"           jump={inputs[3]:.0f}  "
-                f"phase={inputs[4]:.2f}  "
-                f"duck={inputs[5]:.0f}",                    64)
+            row(f"Inputs   : DIST1={inputs[0]:.2f} TYPE1={inputs[1]:.1f} SIZE1={inputs[2]:.2f}", 46)
+            row(f"           DINO_Y={inputs[3]:.2f} SPEED={inputs[4]:.2f}", 62)
             row(f"Outputs  : run={output[0]:.2f}  "
                 f"jump={output[1]:.2f}  "
-                f"duck={output[2]:.2f}",                    82)
-            row(f"Action   : {action_lbl}",                102, action_col)
+                f"duck={output[2]:.2f}",                    78)
+            action_col = [BLACK, (30, 120, 200), (200, 130, 30)][action]
+            row(f"Action   : {action_lbl}",                96, action_col)
             row(f"State    : jumping={bool(best_dino.is_jumping)}  "
-                f"ducking={bool(best_dino.is_ducking)}",   122)
-            row(f"Fitness  : {int(watched_genome.fitness or 0)}", 142, (100, 100, 100))
+                f"ducking={bool(best_dino.is_ducking)}",   112)
+            row(f"Fitness  : {int(watched_genome.fitness or 0)}", 128, (100, 100, 100))
 
             pygame.draw.rect(master.screen, (255, 0, 0),   best_dino.get_rect(), 1)
             if nearest:

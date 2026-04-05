@@ -1,9 +1,0 @@
-# Fdb version 4
-["pdflatex"] 0 "iets.tex" "iets.pdf" "iets" 0 -1
-  "iets.aux" 0 -1 0 "pdflatex"
-  "iets.tex" 0 -1 0 ""
-  (generated)
-  "iets.aux"
-  "iets.log"
-  "iets.pdf"
-  (rewritten before read)

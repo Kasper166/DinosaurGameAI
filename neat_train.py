@@ -4,6 +4,8 @@ import pygame
 import numpy as np
 import json
 import os
+import matplotlib
+matplotlib.use('Agg') # Headless mode: saves images without popping up windows
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from game import DinoGame, Dino
@@ -16,7 +18,7 @@ history = []  # list of dicts per generation
 current_generation = 0 
 def init_dashboard():
     global fig, ax_fitness, ax_table
-    plt.ion()
+    # plt.ion()  # Removed to prevent pop-ups
     fig = plt.figure(figsize=(13, 6))
     fig.patch.set_facecolor('#f9f9f9')
     gs = gridspec.GridSpec(1, 2, width_ratios=[1.6, 1], figure=fig)
@@ -112,7 +114,8 @@ def update_dashboard(generation, best_fitness, avg_fitness, num_species):
     ax_table.set_title(f'Last {len(rows_to_show)} generations', fontsize=10, color='#333', pad=6)
 
     plt.tight_layout(pad=2.0)
-    plt.pause(0.001)
+    plt.savefig("training_progress.png", dpi=150, bbox_inches='tight')
+    # plt.pause(0.001) # Removed to prevent pop-ups
 
 
 # ── Training history helpers ──────────────────────────────────────────────────
@@ -141,32 +144,31 @@ def eval_genome(genome, config, generation=0):
     state = game.reset()
     done  = False
     frames = 0
-
     while not done:
-        inputs = (
-            state[0] / 11.0,
-            float(state[1]),
-            state[2],
-            float(state[3]),
-            state[4] / 3.0,
-            float(state[5]),
-        )
+        inputs = state # The state tuple has 10 values
         output = net.activate(inputs)
         action = int(np.argmax(output))
-        state, reward, done = game.step(action)
+        state, _, done = game.step(action)
         frames += 1
 
-        if frames >= 20000:
+        if frames >= 100000:
             done = True
 
     return frames
 
 def eval_genomes(genomes, config):
-    best = None
+    best      = None
     fitnesses = []
     global current_generation
 
+    import random
+    import numpy as np
+    
     for genome_id, genome in genomes:
+        # Fixed seeding for the entire generation ensures fairness
+        random.seed(current_generation)
+        np.random.seed(current_generation)
+        
         genome.fitness = eval_genome(genome, config, generation=current_generation)
         fitnesses.append(genome.fitness)
         if best is None or genome.fitness > best.fitness:
@@ -200,6 +202,15 @@ def eval_genomes(genomes, config):
     update_dashboard(gen_number, best_fit, avg_fit, num_species)
 
     current_generation += 1
+    
+    # ── Custom termination: Average score >= 2000 ─────────────────────────────
+    if avg_fit >= 5000:
+        print(f"\n[SUCCESS] Goal Reached! Average score {int(avg_fit/10)} >= 2000.")
+        print("Saving final results and stopping training...")
+        plt.ioff()
+        plt.savefig("training_progress.png", dpi=150, bbox_inches='tight')
+        import sys
+        sys.exit(0)
 
 # ── Run ────────────────────────────────────────────────────────────────────────
 def run():
@@ -214,15 +225,29 @@ def run():
 
     init_dashboard()
 
-    import os
-    if os.path.exists("neat-checkpoint-20"):
-        print("Resuming from checkpoint 20...")
-        population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-20")
-    elif os.path.exists("neat-checkpoint-10"):
-        print("Resuming from checkpoint 10...")
-        population = neat.Checkpointer.restore_checkpoint("neat-checkpoint-10")
-    else:
-        population = neat.Population(cfg)
+    # ── Reset / Start from Scratch ──────────────────────────────────────────
+    # This ensures every training session starts fresh and overwrites old files.
+    import glob
+    files_to_delete = [
+        "training_history.json", 
+        "best_genome.pkl", 
+        "best_genome_meta.json", 
+        "last_generation.pkl"
+    ]
+    for f in files_to_delete:
+        if os.path.exists(f):
+            try: os.remove(f)
+            except: pass
+            
+    # Also delete legacy checkpoints
+    for f in glob.glob("neat-checkpoint-*"):
+        try: os.remove(f)
+        except: pass
+        
+    print("[INIT] Old training data cleared. Starting fresh.")
+    
+    # Initialize fresh population
+    population = neat.Population(cfg)
     population.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     population.add_reporter(stats)
@@ -237,7 +262,7 @@ def run():
     # keep the final plot open
     plt.ioff()
     plt.savefig("training_progress.png", dpi=150, bbox_inches='tight')
-    plt.show()
+    # plt.show() # Removed to prevent pop-ups
 
 if __name__ == "__main__":
     run()
