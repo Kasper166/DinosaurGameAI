@@ -35,21 +35,8 @@ def record_demo():
     
     print("Recording frames...")
     
-    while not done and score < 600:
-        dino = game.dino
-        master_state = game.get_state()
-        ground_y   = GROUND_Y - DINO_H
-        jump_phase = 0 if not dino.is_jumping else min(int((ground_y - dino.y) // 20), 3)
-
-        inputs = (
-            master_state[0] / 11.0,
-            float(master_state[1]),
-            master_state[2],
-            float(dino.is_jumping),
-            jump_phase / 3.0,
-            float(dino.is_ducking),
-        )
-
+    while not done and score < 1500: # Record a longer sequence
+        inputs = game.get_state()
         output = net.activate(inputs)
         action = int(np.argmax(output))
 

@@ -204,7 +204,7 @@ def eval_genomes(genomes, config):
     current_generation += 1
     
     # ── Custom termination: Average score >= 2000 ─────────────────────────────
-    if avg_fit >= 5000:
+    if avg_fit >= 10000:
         print(f"\n[SUCCESS] Goal Reached! Average score {int(avg_fit/10)} >= 2000.")
         print("Saving final results and stopping training...")
         plt.ioff()

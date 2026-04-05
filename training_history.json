@@ -1,278 +1,212 @@
 [
   {
     "gen": 1,
-    "best": 1171,
-    "avg": 299,
+    "best": 1177,
+    "avg": 305,
     "species": 0
   },
   {
     "gen": 2,
-    "best": 684,
-    "avg": 427,
+    "best": 1602,
+    "avg": 424,
     "species": 0
   },
   {
     "gen": 3,
-    "best": 442,
-    "avg": 319,
+    "best": 2608,
+    "avg": 323,
     "species": 0
   },
   {
     "gen": 4,
-    "best": 803,
-    "avg": 204,
+    "best": 2505,
+    "avg": 215,
     "species": 0
   },
   {
     "gen": 5,
-    "best": 417,
-    "avg": 156,
+    "best": 3194,
+    "avg": 177,
     "species": 0
   },
   {
     "gen": 6,
-    "best": 412,
-    "avg": 144,
+    "best": 2723,
+    "avg": 158,
     "species": 0
   },
   {
     "gen": 7,
-    "best": 481,
-    "avg": 144,
+    "best": 2578,
+    "avg": 170,
     "species": 0
   },
   {
     "gen": 8,
-    "best": 2894,
-    "avg": 162,
-    "species": 0
-  },
-  {
-    "gen": 9,
-    "best": 754,
-    "avg": 364,
-    "species": 0
-  },
-  {
-    "gen": 10,
-    "best": 1105,
-    "avg": 300,
-    "species": 0
-  },
-  {
-    "gen": 11,
-    "best": 578,
-    "avg": 145,
-    "species": 0
-  },
-  {
-    "gen": 12,
-    "best": 614,
-    "avg": 228,
-    "species": 0
-  },
-  {
-    "gen": 13,
-    "best": 733,
-    "avg": 157,
-    "species": 0
-  },
-  {
-    "gen": 14,
-    "best": 630,
-    "avg": 181,
-    "species": 0
-  },
-  {
-    "gen": 15,
-    "best": 3518,
-    "avg": 213,
-    "species": 0
-  },
-  {
-    "gen": 16,
-    "best": 620,
-    "avg": 154,
-    "species": 0
-  },
-  {
-    "gen": 17,
-    "best": 1028,
-    "avg": 186,
-    "species": 0
-  },
-  {
-    "gen": 18,
-    "best": 2619,
-    "avg": 185,
-    "species": 0
-  },
-  {
-    "gen": 19,
-    "best": 2544,
-    "avg": 156,
-    "species": 0
-  },
-  {
-    "gen": 20,
-    "best": 2943,
-    "avg": 198,
-    "species": 0
-  },
-  {
-    "gen": 21,
-    "best": 2792,
-    "avg": 201,
-    "species": 0
-  },
-  {
-    "gen": 22,
-    "best": 2561,
-    "avg": 196,
-    "species": 0
-  },
-  {
-    "gen": 23,
-    "best": 2621,
-    "avg": 199,
-    "species": 0
-  },
-  {
-    "gen": 24,
-    "best": 2925,
-    "avg": 191,
-    "species": 0
-  },
-  {
-    "gen": 25,
-    "best": 4757,
-    "avg": 204,
-    "species": 0
-  },
-  {
-    "gen": 26,
-    "best": 3685,
-    "avg": 185,
-    "species": 0
-  },
-  {
-    "gen": 27,
-    "best": 3777,
-    "avg": 212,
-    "species": 0
-  },
-  {
-    "gen": 28,
-    "best": 3656,
-    "avg": 194,
-    "species": 0
-  },
-  {
-    "gen": 29,
-    "best": 3561,
-    "avg": 209,
-    "species": 0
-  },
-  {
-    "gen": 30,
-    "best": 3659,
-    "avg": 278,
-    "species": 0
-  },
-  {
-    "gen": 31,
-    "best": 2946,
+    "best": 5562,
     "avg": 182,
     "species": 0
   },
   {
-    "gen": 32,
-    "best": 3597,
+    "gen": 9,
+    "best": 5566,
+    "avg": 401,
+    "species": 0
+  },
+  {
+    "gen": 10,
+    "best": 100000,
+    "avg": 796,
+    "species": 0
+  },
+  {
+    "gen": 11,
+    "best": 1575,
+    "avg": 158,
+    "species": 0
+  },
+  {
+    "gen": 12,
+    "best": 3116,
+    "avg": 256,
+    "species": 0
+  },
+  {
+    "gen": 13,
+    "best": 3153,
+    "avg": 186,
+    "species": 0
+  },
+  {
+    "gen": 14,
+    "best": 3507,
     "avg": 209,
     "species": 0
   },
   {
+    "gen": 15,
+    "best": 3881,
+    "avg": 246,
+    "species": 0
+  },
+  {
+    "gen": 16,
+    "best": 5267,
+    "avg": 195,
+    "species": 0
+  },
+  {
+    "gen": 17,
+    "best": 4625,
+    "avg": 242,
+    "species": 0
+  },
+  {
+    "gen": 18,
+    "best": 100000,
+    "avg": 490,
+    "species": 0
+  },
+  {
+    "gen": 19,
+    "best": 100000,
+    "avg": 969,
+    "species": 0
+  },
+  {
+    "gen": 20,
+    "best": 100000,
+    "avg": 1362,
+    "species": 0
+  },
+  {
+    "gen": 21,
+    "best": 100000,
+    "avg": 2436,
+    "species": 0
+  },
+  {
+    "gen": 22,
+    "best": 100000,
+    "avg": 1530,
+    "species": 0
+  },
+  {
+    "gen": 23,
+    "best": 100000,
+    "avg": 2445,
+    "species": 0
+  },
+  {
+    "gen": 24,
+    "best": 100000,
+    "avg": 3391,
+    "species": 0
+  },
+  {
+    "gen": 25,
+    "best": 100000,
+    "avg": 2915,
+    "species": 0
+  },
+  {
+    "gen": 26,
+    "best": 100000,
+    "avg": 3590,
+    "species": 0
+  },
+  {
+    "gen": 27,
+    "best": 100000,
+    "avg": 2646,
+    "species": 0
+  },
+  {
+    "gen": 28,
+    "best": 100000,
+    "avg": 2721,
+    "species": 0
+  },
+  {
+    "gen": 29,
+    "best": 100000,
+    "avg": 2913,
+    "species": 0
+  },
+  {
+    "gen": 30,
+    "best": 100000,
+    "avg": 3009,
+    "species": 0
+  },
+  {
+    "gen": 31,
+    "best": 100000,
+    "avg": 3138,
+    "species": 0
+  },
+  {
+    "gen": 32,
+    "best": 100000,
+    "avg": 4537,
+    "species": 0
+  },
+  {
     "gen": 33,
-    "best": 2745,
-    "avg": 219,
+    "best": 100000,
+    "avg": 4972,
     "species": 0
   },
   {
     "gen": 34,
-    "best": 2735,
-    "avg": 249,
+    "best": 100000,
+    "avg": 7243,
     "species": 0
   },
   {
     "gen": 35,
-    "best": 3068,
-    "avg": 211,
-    "species": 0
-  },
-  {
-    "gen": 36,
-    "best": 3677,
-    "avg": 202,
-    "species": 0
-  },
-  {
-    "gen": 37,
-    "best": 2826,
-    "avg": 174,
-    "species": 0
-  },
-  {
-    "gen": 38,
-    "best": 4629,
-    "avg": 274,
-    "species": 0
-  },
-  {
-    "gen": 39,
     "best": 100000,
-    "avg": 438,
-    "species": 0
-  },
-  {
-    "gen": 40,
-    "best": 100000,
-    "avg": 496,
-    "species": 0
-  },
-  {
-    "gen": 41,
-    "best": 100000,
-    "avg": 901,
-    "species": 0
-  },
-  {
-    "gen": 42,
-    "best": 100000,
-    "avg": 2473,
-    "species": 0
-  },
-  {
-    "gen": 43,
-    "best": 100000,
-    "avg": 4036,
-    "species": 0
-  },
-  {
-    "gen": 44,
-    "best": 100000,
-    "avg": 4476,
-    "species": 0
-  },
-  {
-    "gen": 45,
-    "best": 100000,
-    "avg": 3372,
-    "species": 0
-  },
-  {
-    "gen": 46,
-    "best": 100000,
-    "avg": 5632,
+    "avg": 10598,
     "species": 0
   }
 ]
