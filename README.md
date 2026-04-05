@@ -30,6 +30,8 @@ The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame
 1. Training Performance (game.py)
 This demonstrates a high-performing generation navigating obstacles at increasing speeds. The AI has learned to prioritize jump timing and ducking transitions based on real-time distance calculations.
 
+I first play myself, if you want to only see the generation play skip forward to 1:12.
+
 
 [![Watch the AI Play](https://img.youtube.com/vi/RbqzpCAndYE/0.jpg)](https://www.youtube.com/watch?v=RbqzpCAndYE)
 
