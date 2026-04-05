@@ -30,7 +30,7 @@ The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame
 
 | Key | Mode | Description |
 |-----|------|-------------|
-| `SPACE` | **Manual** | You play solo — real Chrome Dino difficulty curve |
+| `SPACE` | **Manual** | You play solo — real Chrome Dino difficulty curve. You can click `T` to play alongside the best genome |
 | `A` | **Play vs AI** | You and the best genome run side by side |
 | `W` | **Watch AI** | The best genome plays autonomously (press `F` for fast-forward) |
 | `D` | **Spectator** | Watch the entire last training generation evolve in real-time |
@@ -47,16 +47,15 @@ After every game a built-in analytics screen shows:
 
 ### Neural Network — Inputs & Outputs
 
-Each agent uses a feed-forward network evaluated every frame with **6 inputs**:
+Each agent uses a feed-forward network evaluated every frame with **5 inputs**:
 
 | Input | Description |
 |-------|-------------|
-| Distance bucket | Discretised frames-to-obstacle (0 = imminent → 11 = far) |
-| Obstacle type | 0 = Cactus · 1 = Bird |
-| Bird Y (normalised) | Height of the approaching bird relative to screen |
-| Is jumping | 1 if the dino is airborne |
-| Jump phase | Height stage during current jump (0–3) |
-| Is ducking | 1 if currently crouching |
+| Distance to Obstacle | Normalized distance to the next obstacle (0.0 to 1.0) |
+| Obstacle Type | 0.5 for Cactus, 1.0 for Bird |
+| Obstacle Size/Height | Normalized width for cacti, or height category for birds (low/mid/high) |
+| Dino Y-Position | Normalized height of the dino on the screen |
+| Game Speed | Normalized current game speed |
 
 **3 outputs:** `0` Run · `1` Jump · `2` Duck
 
@@ -65,10 +64,10 @@ Each agent uses a feed-forward network evaluated every frame with **6 inputs**:
 | Parameter | Value |
 |-----------|-------|
 | Population | 450 genomes / generation |
-| Fitness | Frames survived (capped at 20 000) |
+| Fitness | Frames survived (capped at 100 000) |
 | Speed (training) | Starts at 7, `+1` every 500 frames |
-| Speed (human play) | Starts at 6.0, `+0.5` every 200 display-score points |
-| Bird spawn gate (human) | No birds until display score ≥ 300 |
+| Speed (human play) | Starts at 6.0, `+1.0` every 200 display-score points |
+| Bird spawn gate (human) | No birds until display score ≥ 10 |
 
 **Dynamic Curriculum Learning** — mid/low birds appear early in training so the network is forced to learn ducking before it can rely on always jumping.
 
