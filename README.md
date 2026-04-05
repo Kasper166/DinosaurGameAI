@@ -27,7 +27,11 @@ The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame
 ---
 
 ## Watch one entire generation play
+Here is a demo of when you would run game.py
 [![Watch the AI Play](https://img.youtube.com/vi/RbqzpCAndYE/0.jpg)](https://www.youtube.com/watch?v=RbqzpCAndYE)
+
+Here is a demo of when you run replay.py I used this one to debug my code. I could see how my AI thinks.
+![DEMO GIF](Demo replay.py.gif)
 
 ## 🎮 Play Modes
 
