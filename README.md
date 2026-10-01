@@ -6,7 +6,7 @@
 [![NEAT-Python](https://img.shields.io/badge/NEAT--Python-0.92-4CAF50)](https://neat-python.readthedocs.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A pixel-perfect Pygame clone of the Chrome Dinosaur game where a neural network — evolved entirely from scratch using **NEAT (NeuroEvolution of Augmenting Topologies)** — learns to survive indefinitely at any speed.
+A Pygame clone of the Chrome Dinosaur game where a neural network — evolved entirely from scratch using **NEAT (NeuroEvolution of Augmenting Topologies)** — learns to survive indefinitely at any speed.
 
 ![Demo GIF](demo.gif)
 
@@ -30,7 +30,7 @@ The AI controls a dinosaur and must choose to **Run, Jump, or Duck** every frame
 1. Training Performance (game.py)
 This demonstrates a high-performing generation navigating obstacles at increasing speeds. The AI has learned to prioritize jump timing and ducking transitions based on real-time distance calculations.
 
-I first play myself, if you want to only see the generation play skip forward to 1:12.
+I first play myself, if you want to only see the generation play skip forward to 1:12. Click on the picture to watch the video on YouTube.
 
 
 [![Watch the AI Play](https://img.youtube.com/vi/RbqzpCAndYE/0.jpg)](https://www.youtube.com/watch?v=RbqzpCAndYE)
@@ -41,21 +41,6 @@ I first play myself, if you want to only see the generation play skip forward to
 I developed this "Spectator Mode" to visualize the AI's decision-making process. It allows for real-time debugging by overlaying the network's perception—helping to verify how the genome reacts to specific obstacle patterns. You can see the most recent generation that completed.
 
 ![DEMO GIF](Demo_replay.gif)
-
-## 🎮 Play Modes
-
-| Key | Mode | Description |
-|-----|------|-------------|
-| `SPACE` | **Manual** | You play solo — real Chrome Dino difficulty curve. You can click `T` to play alongside the best genome |
-| `D` | **Spectator** | Watch the entire last training generation evolve in real-time |
-
-### Post-Game Analytics
-After every game a built-in analytics screen shows:
-- Your score vs the AI's all-time best and average fitness
-- An inline bar chart of best/avg fitness per generation
-- Which generation first surpassed your score
-
----
 
 ## 🧠 How the AI Works
 
@@ -191,5 +176,3 @@ DinosaurGameAI/
 - [Altair](https://altair-viz.github.io/)
 
 ---
-
-*Created as a portfolio piece demonstrating Reinforcement Learning principles, evolutionary algorithms, and classical control environments in Python.*
